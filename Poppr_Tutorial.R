@@ -118,4 +118,66 @@ clonecorrect(aphan, strata = ~Pop) # correcting by field - MLG much closer to ce
 
 clonecorrect(aphan, strata = NA) #correcting over whole data set. MLG equal to census (diploid individuals)
 
+#Shufflepop Bruvo's distance example
 
+data(nancycats)
+nan1 <- popsub(nancycats, 1)
+reps <- rep(2, 9) # Assuming dinucleotide repeats.
+observed <- mean(bruvo.dist(nan1, replen = reps))
+observed
+
+
+#Replicate resampling 999 times & create histogram to visualise distribution what would happen under different panmiia assumps
+
+set.seed(9999)
+bd.test <- replicate(999, mean(bruvo.dist(shufflepop(nan1, method = 2), replen = reps)))
+hist(bd.test, xlab = "Bruvo's Distance", main = "Average Bruvo's distance over 999 randomizations")
+abline(v = observed, col = "red")
+legend('topleft', legend="observed", col="red", lty = 1)
+
+#Uninformative microsat loci example
+
+data(nancycats)
+naninform <- informloci(nancycats, cutoff = 0.05)
+
+
+#Determining how many MLGs in a dataset example
+
+H3N2 #information displayed when view object
+H3N2_mlg <- mlg(H3N2) #store number of MLGs
+
+#MLGs across populations 
+
+setPop(H3N2) <- ~country
+v.dup <- mlg.crosspop(H3N2, quiet=TRUE) # quiet = FALSE gives output of MLG name, total individuals of MLG and populations where found 
+
+
+#Count number of populations each MLG crosses 
+v.num <- sapply(v.dup, length) # count the number of populations each MLG crosses.
+head(v.num)
+
+#MLG tables and graphs 
+
+mlg.table(H3N2, sublist = "Norway", plot = TRUE)
+
+
+setPop(H3N2) <- ~year
+summary(H3N2) # Check the data to make sure it's correct.
+library("vegan")
+H.year <- mlg.table(H3N2, plot = FALSE)
+rarecurve(H.year, ylab="Number of expected MLGs", sample=min(rowSums(H.year)),
+          border = NA, fill = NA, font = 2, cex = 1, col = "blue")
+
+#Combining MLG functions 
+
+v.tab <- mlg.table(H3N2, plot = FALSE)
+v.tab[1:10, 1:10] # Showing the first 10 columns and rows of the table.
+
+setPop(H3N2) <- ~country
+UGNN.list <- c("United Kingdom", "Germany", "Netherlands", "Norway")
+UGNN <- mlg.crosspop(H3N2, sublist=UGNN.list, indexreturn=TRUE)
+
+
+UGNN # Note that we have three numbers here. This will index the columns for us.
+UGNN.list # And let's not forget that we have the population names.
+v.tab[UGNN.list, UGNN]

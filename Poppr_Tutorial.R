@@ -269,5 +269,4 @@ raw_dist <- function(x){
 
 plot.phylo(upgma(xdis)) # new, mut, C may be same multilocus lineage (MLL)
 
-#Filtered ("contracted")
 

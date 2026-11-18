@@ -1,6 +1,8 @@
 install.packages("poppr", repos = "https://cloud.r-project.org/")
 library(poppr)
 
+###Data import and manipulation  ####
+
 find.package("poppr") 
 # "C:/Users/tallu/AppData/Local/R/win-library/4.3/poppr"
 
@@ -181,3 +183,25 @@ UGNN <- mlg.crosspop(H3N2, sublist=UGNN.list, indexreturn=TRUE)
 UGNN # Note that we have three numbers here. This will index the columns for us.
 UGNN.list # And let's not forget that we have the population names.
 v.tab[UGNN.list, UGNN]
+
+
+
+
+
+####
+
+###Analysis of Multilocus Genotypes and Lineages ####
+
+library("poppr")
+data(monpop)
+monpop
+head(mll(monpop, "original"), 20) # Showing the definitions for the first 20 samples
+#Get a warning because monopop data was created for mll() was implemented 
+
+mll(monpop) <- "original"
+monpop
+# 264 original multilocus genotypes (current MLG number and definition)
+
+mll(monpop) <- "custom"
+monpop
+# Now 264 custom MLGs.

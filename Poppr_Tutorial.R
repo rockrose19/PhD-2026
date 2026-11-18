@@ -269,4 +269,54 @@ raw_dist <- function(x){
 
 plot.phylo(upgma(xdis)) # new, mut, C may be same multilocus lineage (MLL)
 
-# 
+# Filtered (contracted)
+# Fix issues with naive MLGs, can utlise genetic distance - allow us to collapse MLGs that are under a specific distance threshold 
+#mlg.filter() creates a dissilimarity matrix from data and then filter based off matrix 
+#need to define a threshold : minimum distance to consider 2 genotypes unique (anything below cluster into same MLG)
+
+x # We have 7 MLGs before filtering
+
+mlg.filter(x, distance = xdis) <- 1 + .Machine$double.eps^0.5
+x # Now we have 5 MLGs
+
+mll(x) <- "original" # We'll reset to the naive definition
+
+#THRESHOLDS 
+#To collapse all 3 new samples into the original 5 MLGs, had to set a threshold just above 1
+#Use function to return the MLGs it created and the thresholds that were passed to clister MLLS:
+
+mll(x, "original")
+mlg.filter(x, distance = xdis, threshold = 1, stats = c("mlg", "thresholds"))
+#MLG 5 has collapsed into MLG3 
+#What happens when add very small number to 1:
+
+(e <- .Machine$double.eps^0.5) # A very tiny number
+mlg.filter(x, distance = xdis, threshold = 1 + e, stats = c("mlg", "thresholds"))
+
+#Using threshold of 0 allows 2 MLGs seperated by zero genetic distance to remain mutually unique 
+mlg.filter(x, distance = xdis, threshold = 0, stats = c("mlg", "thresholds"))
+mll(x, "original")
+
+
+#Setting the genotypes 
+#Want the reassign sample genotypes to the collapsed version:
+#This code is not working for some reason.....
+
+x
+mlg.table(x) # Before: 7 MLGs
+mlg.filter(x, distance = xdis) <- 1 + e
+x
+mlg.table(x) # After: 5 MLGs
+#See https://zkamvar.github.io/poppr/articles/mlg.html for this section above if needed 
+
+#TIE BREAKERS (algorithms)
+# Underlying mlg.filter are three algorithms that decide what genotypes go together- nearest neighbour, farthest neighbour, average neighbout (UPGMA)
+# filter_stats() plots output of filtering algorithm 
+
+data(Pinf)
+Pinf
+pinfreps <- fix_replen(Pinf, c(2, 2, 6, 2, 2, 2, 2, 2, 3, 3, 2))
+pinf_filtered <- filter_stats(Pinf, distance = bruvo.dist, replen = pinfreps, plot = TRUE)
+
+#Choosing a threshold 
+

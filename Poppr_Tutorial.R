@@ -317,6 +317,61 @@ data(Pinf)
 Pinf
 pinfreps <- fix_replen(Pinf, c(2, 2, 6, 2, 2, 2, 2, 2, 3, 3, 2))
 pinf_filtered <- filter_stats(Pinf, distance = bruvo.dist, replen = pinfreps, plot = TRUE)
-
+Pinf <- as.genclone(Pinf)
 #Choosing a threshold 
+#After choosing genetic distance and a filtering algorithm, must decide on threshold to represent min genetictance at which 2 individuals would be considered from different clonal lineages
+#One method = look for an initial small peak in the histogram of pairwise genetic distances & set threshold between that peak and larger peak. Initial peak likely clones differentiated by a small set of random mutations. 
+#If peak not obvious, then look for largest gap between all putative thresholds; use cutoff_predictor() with the output of filter_stats(). 
+
+print(farthest_thresh <- cutoff_predictor(pinf_filtered$farthest$THRESHOLDS))
+print(average_thresh  <- cutoff_predictor(pinf_filtered$average$THRESHOLDS))
+print(nearest_thresh  <- cutoff_predictor(pinf_filtered$nearest$THRESHOLDS))
+
+#Then can define multilocus lineages with following criteari: t = threshold, d= distance/Bruvo's Distance, a = algothithm (farthest neighbout)
+
+mlg.filter(Pinf, distance = bruvo.dist, replen = pinfreps, algorithm = "f") <- farthest_thresh
+Pinf
+
+#Custom ("custom"), make custom MLGs
+#Example:
+data(partial_clone)
+pc <- as.genclone(partial_clone)
+mll(pc)
+
+#Change MLGs to letters:
+LETTERS[mll(pc)]  # The new MLGs
+library(ggplot2)
+mll.custom(pc) <- LETTERS[mll(pc)]
+mlg.table(pc) #not working again, ggplot2 theme error
+
+#Minimum spanning networks:
+pcpal <- colorRampPalette(c("blue", "gold"))
+set.seed(9001)
+pcmsn <- bruvo.msn(pc, replen = rep(1, nLoc(pc)), palette = pcpal,
+                   vertex.label.color = "firebrick", vertex.label.font = 2,
+                   vertex.label.cex = 1.5)
+
+#If we found Q is the same is M and wanted to change it:
+mll.levels(pc)[mll.levels(pc) == "Q"] <- "M"
+
+set.seed(9001)
+pcmsn <- bruvo.msn(pc, replen = rep(1, nLoc(pc)), palette = pcpal,
+                   vertex.label.color = "firebrick", vertex.label.font = 2,
+                   vertex.label.cex = 1.5)
+
+
+#DIVERSITY ANALYSIS
+#Look at distribution of multilocus genotypes 
+data(monpop)
+splitStrata(monpop) <- ~Tree/Year/Symptom
+montab <- mlg.table(monpop, strata = ~Symptom/Year, plot = FALSE) #again doesn't plot, turned off splot to do downstram stats
+
+#Basic Statistics 
+#The function diversity_stats() is used to get basic diversity statistics:
+
+(monstat <- diversity_stats(montab))
+
+#Confidence intervals 
+
+diversity_ci(montab, n = 100L, raw = FALSE) #again, won't plot
 

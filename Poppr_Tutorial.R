@@ -194,7 +194,6 @@ v.tab[UGNN.list, UGNN]
 
 library("poppr")
 data(monpop)
-monpop
 head(mll(monpop, "original"), 20) # Showing the definitions for the first 20 samples
 #Get a warning because monopop data was created for mll() was implemented 
 
@@ -205,3 +204,70 @@ monpop
 mll(monpop) <- "custom"
 monpop
 # Now 264 custom MLGs.
+
+#Demonstration of how to contrust each MLG definition:
+
+#Naive ("original")
+
+mll(monpop) <- "original"
+monpop
+#There are 694 samples, but only 264 MLGs over 13 loci. 
+#Naive definition takes strings of alleles and compares them for equality - doesn't take inot account genotyping error, hyper-variable loci and missing data - contribute to unique genotpe but not truly unique
+
+
+#Example of 5 samples with alleles typed at 2 loci
+
+grid_example <- matrix(c(1, 4,
+                         1, 1,
+                         5, 1,
+                         9, 1,
+                         9, 4),
+                       ncol = 2,
+                       byrow = TRUE)
+rownames(grid_example) <- LETTERS[1:5]
+colnames(grid_example) <- c("x", "y")
+grid_example
+
+
+x <- as.genclone(df2genind(grid_example, ploidy = 1))
+tab(x)  # Look at the multilocus genotype table
+
+
+nmll(x) # count the number of multilocus genotypes
+mll(x)  # show the multilocus genotype definitions
+#nmll() function counts the number of MLGs in sample
+#mll() function displays the assignment of ML lineages in sample 
+
+#Include another sample with partial missing data , missing y locus
+x <- as.genclone(df2genind(rbind(grid_example, new = c(5, NA)), ploidy = 1))
+tab(x)  # Note the missing data at locus 2.
+
+nmll(x) #6 MLGs even though one contains missing data
+mll(x)
+#Include another sample with low-frequency allele at locus y "2", but allele "5" at locus x
+grid_new <- rbind(grid_example,
+                  new = c(5, NA),
+                  mut = c(5, 2)
+)
+x <- as.genclone(df2genind(grid_new, ploidy = 1))
+tab(x)
+nmll(x)
+mll(x)
+
+#genotype added is closer to genotype that shares the 5 allele - happens because naive algorithm reports the rank of concatenated alleles
+
+(xt <- apply(tab(x), 1, paste, collapse = ""))
+rank(xt, ties.method = "first")
+
+#Calculate pairwise euclidean distances between samples:
+library("phangorn")
+library("ape")
+raw_dist <- function(x){
+  dist(genind2df(x, usepop = FALSE))
+}
+(xdis <- raw_dist(x)) # new, mut and C are very similar 
+
+plot.phylo(upgma(xdis)) # new, mut, C may be same multilocus lineage (MLL)
+
+#Filtered ("contracted")
+
